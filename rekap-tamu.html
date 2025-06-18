@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Arsip Tamu - SESPRI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0D1117;
+            --bg-dark: #161B22;
+            --bg-light: #21262D;
+            --border-color: #30363D;
+            --secondary-color: #00AFFF;
+            --accent-color: #E0115F;
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --glow-shadow: 0 0 15px rgba(0, 175, 255, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        .container { display: flex; min-height: 100vh; }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px; background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh; left: -280px; transition: all 0.3s ease;
+            z-index: 1000; overflow-y: auto;
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 2rem; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .logo-img {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(145deg, var(--secondary-color), var(--accent-color));
+            margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
+            border: 3px solid var(--primary-color); box-shadow: var(--glow-shadow);
+        }
+        .logo-img svg { width: 40px; height: 40px; color: white; }
+        .sidebar-header h2 { font-size: 1.5rem; letter-spacing: 1px; }
+        .sidebar-header p { color: var(--text-secondary); font-size: 0.9rem; }
+        .nav-menu { list-style: none; padding: 1rem 0; }
+        .nav-link {
+            display: flex; align-items: center; padding: 1rem 2rem;
+            color: var(--text-secondary); text-decoration: none; transition: all 0.3s ease;
+            border-left: 3px solid transparent; gap: 1rem;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary); background: rgba(0, 175, 255, 0.1);
+            border-left-color: var(--secondary-color);
+        }
+        .nav-link svg { width: 20px; height: 20px; }
+
+        /* Main Content Styles */
+        .main-content { flex: 1; margin-left: 0; transition: all 0.3s ease; }
+        .main-content.shifted { margin-left: 280px; }
+        
+        .header {
+            background: rgba(13, 17, 23, 0.8); backdrop-filter: blur(5px);
+            padding: 1rem 2rem; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .menu-toggle { background: none; border: none; color: var(--secondary-color); cursor: pointer; padding: 0.5rem; border-radius: 5px; }
+        .menu-toggle svg { width: 24px; height: 24px; }
+        .header-title { font-size: 1.5rem; font-weight: 600; }
+
+        .content { padding: 2rem; }
+        
+        .card {
+            background: linear-gradient(145deg, var(--bg-light), var(--primary-color));
+            border-radius: 12px; padding: 1.5rem 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .card h3 { color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.3rem; display: flex; align-items: center; gap: 0.7rem; font-weight: 500; }
+        .card h3 svg { width: 24px; height: 24px; color: var(--secondary-color); }
+
+        .filter-container { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .year-filter label { font-weight: 500; margin-right: 0.5rem; }
+        .year-filter select {
+            padding: 0.5rem 1rem; background: var(--bg-dark); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Poppins', sans-serif;
+        }
+        
+        .month-tabs {
+            display: flex; overflow-x: auto; gap: 0.5rem;
+            padding-bottom: 1rem; margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .month-tab {
+            padding: 0.6rem 1.2rem; background: var(--bg-light);
+            border: 1px solid var(--border-color); border-radius: 20px;
+            white-space: nowrap; cursor: pointer; transition: all 0.3s ease;
+        }
+        .month-tab:hover { background: var(--bg-dark); }
+        .month-tab.active {
+            background: var(--secondary-color); color: var(--primary-color);
+            font-weight: 600; box-shadow: var(--glow-shadow);
+        }
+
+        .table-container { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; background: transparent; }
+        .table th {
+            background: var(--bg-light); border-bottom: 2px solid var(--secondary-color);
+            padding: 1rem; text-align: left; font-weight: 600;
+        }
+        .table td { padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .table tbody tr:hover { background: var(--bg-light); }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        @media (max-width: 768px) {
+            .main-content.shifted { margin-left: 0; }
+            .header, .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0 1 12.28 0C16.43 19.18 14.03 20 12 20z"/></svg></div>
+                <h2>SESPRI</h2><p>Sekretaris Pribadi Digital</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="registrasi.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg><span>Registrasi Tamu</span></a></li>
+                <li class="nav-item"><a href="surat-masuk.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Surat Masuk</span></a></li>
+                <li class="nav-item"><a href="surat-keluar.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Surat Keluar</span></a></li>
+                <li class="nav-item"><a href="agenda.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Agenda</span></a></li>
+                <li class="nav-item"><a href="registrasi-tamu-publik.html" class="nav-link" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg><span>Link Buku Tamu</span></a></li>
+                <li class="nav-item"><a href="rekap-tamu.html" class="nav-link active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Rekap Arsip Tamu</span></a></li>
+            </ul>
+        </nav>
+        <div class="overlay" id="overlay"></div>
+
+        <main class="main-content" id="mainContent">
+            <header class="header">
+                <button class="menu-toggle" id="menuToggle"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <h1 class="header-title">Rekap Arsip Tamu</h1>
+            </header>
+
+            <div class="content">
+                <div class="card">
+                    <div class="filter-container">
+                        <div class="year-filter">
+                            <label for="yearSelector">Pilih Tahun:</label>
+                            <select id="yearSelector"></select>
+                        </div>
+                    </div>
+
+                    <div class="month-tabs" id="monthTabsContainer">
+                        <!-- Tabs will be generated by JS -->
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr><th>No</th><th>Nama</th><th>Instansi</th><th>Keperluan</th><th>Tanggal Selesai</th></tr>
+                            </thead>
+                            <tbody id="rekapTamuBody">
+                                <!-- Data will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Globals
+            let allTamuData = [];
+            let selectedYear, selectedMonth;
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+            // DOM Elements
+            const yearSelector = document.getElementById('yearSelector');
+            const monthTabsContainer = document.getElementById('monthTabsContainer');
+            const rekapTamuBody = document.getElementById('rekapTamuBody');
+
+            // --- Sidebar Logic ---
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const mainContent = document.getElementById('mainContent');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                if (window.innerWidth > 768) mainContent.classList.toggle('shifted');
+            }
+
+            menuToggle.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+             if (window.innerWidth > 768) {
+                sidebar.classList.add('active');
+                mainContent.classList.add('shifted');
+            }
+            
+            // --- Main Logic ---
+
+            function loadData() {
+                const rawData = localStorage.getItem('tamuData');
+                allTamuData = rawData ? JSON.parse(rawData) : [];
+            }
+
+            function populateYearFilter() {
+                const years = [...new Set(allTamuData.map(tamu => new Date(tamu.waktu).getFullYear()))];
+                const currentYear = new Date().getFullYear();
+                if (!years.includes(currentYear)) {
+                    years.push(currentYear);
+                }
+                years.sort((a,b) => b - a);
+                
+                yearSelector.innerHTML = '';
+                years.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelector.appendChild(option);
+                });
+                selectedYear = yearSelector.value;
+            }
+
+            function createMonthTabs() {
+                monthTabsContainer.innerHTML = '';
+                monthNames.forEach((month, index) => {
+                    const tab = document.createElement('div');
+                    tab.className = 'month-tab';
+                    tab.textContent = month;
+                    tab.dataset.month = index;
+                    monthTabsContainer.appendChild(tab);
+                    tab.addEventListener('click', () => handleMonthClick(tab));
+                });
+            }
+            
+            function handleMonthClick(clickedTab) {
+                document.querySelectorAll('.month-tab').forEach(tab => tab.classList.remove('active'));
+                clickedTab.classList.add('active');
+                selectedMonth = parseInt(clickedTab.dataset.month);
+                displayRecapData();
+            }
+
+            function displayRecapData() {
+                const filteredData = allTamuData.filter(tamu => {
+                    const visitDate = new Date(tamu.waktu);
+                    return tamu.status === 'Selesai' &&
+                           visitDate.getFullYear() == selectedYear &&
+                           visitDate.getMonth() == selectedMonth;
+                });
+
+                rekapTamuBody.innerHTML = '';
+                if (filteredData.length === 0) {
+                    rekapTamuBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Tidak ada data arsip untuk periode ini.</td></tr>`;
+                    return;
+                }
+
+                filteredData.forEach((tamu, index) => {
+                    const row = document.createElement('tr');
+                    const visitDate = new Date(tamu.waktu);
+                    const formattedDate = visitDate.toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    });
+
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${tamu.nama}</td>
+                        <td>${tamu.instansi || '-'}</td>
+                        <td>${tamu.keperluan}</td>
+                        <td>${formattedDate}</td>
+                    `;
+                    rekapTamuBody.appendChild(row);
+                });
+            }
+
+            function init() {
+                loadData();
+                populateYearFilter();
+                createMonthTabs();
+
+                // Set default view to current month and year
+                const currentMonthIndex = new Date().getMonth();
+                const defaultMonthTab = monthTabsContainer.querySelector(`[data-month="${currentMonthIndex}"]`);
+                if (defaultMonthTab) {
+                    defaultMonthTab.click();
+                } else if (monthTabsContainer.firstChild) {
+                    monthTabsContainer.firstChild.click(); // Fallback to first month
+                } else {
+                     displayRecapData(); // Display empty if no tabs
+                }
+                
+                yearSelector.addEventListener('change', (e) => {
+                    selectedYear = e.target.value;
+                    displayRecapData();
+                });
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>

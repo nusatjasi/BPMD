@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SESPRI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Futuristic Color Palette & Theme */
+        :root {
+            --primary-color: #0D1117;
+            --bg-dark: #161B22;
+            --bg-light: #21262D;
+            --border-color: #30363D;
+            --secondary-color: #00AFFF; /* Electric Blue */
+            --accent-color: #E0115F;   /* Ruby */
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --glow-shadow: 0 0 15px rgba(0, 175, 255, 0.4);
+            --glow-shadow-accent: 0 0 15px rgba(224, 17, 95, 0.4);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--primary-color);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Futuristic Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-color);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+
+        .loader-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 30px);
+            grid-template-rows: repeat(3, 30px);
+            gap: 5px;
+            margin-bottom: 1.5rem;
+        }
+
+        .loader-grid div {
+            background-color: var(--secondary-color);
+            opacity: 0;
+            border-radius: 5px;
+            animation: flicker 1.2s infinite ease-in-out;
+        }
+        
+        .loader-grid div:nth-child(1) { animation-delay: 0.1s; }
+        .loader-grid div:nth-child(2) { animation-delay: 0.4s; }
+        .loader-grid div:nth-child(3) { animation-delay: 0.2s; }
+        .loader-grid div:nth-child(4) { animation-delay: 0.5s; }
+        .loader-grid div:nth-child(5) { animation-delay: 0.3s; }
+        .loader-grid div:nth-child(6) { animation-delay: 0.6s; }
+        .loader-grid div:nth-child(7) { animation-delay: 0.4s; }
+        .loader-grid div:nth-child(8) { animation-delay: 0.7s; }
+        .loader-grid div:nth-child(9) { animation-delay: 0.5s; }
+
+        @keyframes flicker {
+            0%, 100% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            letter-spacing: 2px;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            z-index: 2000;
+            transform: translateX(150%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { border-left: 4px solid var(--success-color); }
+        .notification.error { border-left: 4px solid var(--error-color); }
+        .notification-icon svg { width: 24px; height: 24px; }
+        .notification-message { font-weight: 500; }
+
+        /* Sidebar with Glassmorphism */
+        .sidebar {
+            width: 280px;
+            background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            color: var(--text-primary);
+            position: fixed;
+            height: 100vh;
+            left: -280px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar.active { left: 0; }
+
+        .sidebar-header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--secondary-color), var(--accent-color));
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            border: 3px solid var(--primary-color);
+            box-shadow: var(--glow-shadow);
+        }
+
+        .logo-img svg { width: 40px; height: 40px; }
+        .sidebar-header h2 { font-size: 1.5rem; letter-spacing: 1px; }
+        .sidebar-header p { color: var(--text-secondary); font-size: 0.9rem; }
+        .nav-menu { list-style: none; padding: 1rem 0; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 2rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            gap: 1rem;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-primary);
+            background: rgba(0, 175, 255, 0.1);
+            border-left-color: var(--secondary-color);
+        }
+        .nav-link svg { width: 20px; height: 20px; transition: all 0.3s ease; }
+        .nav-link:hover svg, .nav-link.active svg { fill: var(--secondary-color); }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 0;
+            transition: all 0.3s ease;
+        }
+        .main-content.shifted { margin-left: 280px; }
+
+        /* Header */
+        .header {
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .menu-toggle:hover { background: var(--bg-light); box-shadow: var(--glow-shadow); }
+        .menu-toggle svg { width: 24px; height: 24px; }
+        .header-title { font-size: 1.5rem; color: var(--text-primary); font-weight: 600; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: 1px solid var(--secondary-color);
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: var(--secondary-color);
+        }
+        .btn-primary { background: var(--secondary-color); color: var(--primary-color); }
+        .btn:hover { transform: translateY(-3px); box-shadow: var(--glow-shadow); }
+        .btn svg { width: 16px; height: 16px; }
+
+        /* Content Sections */
+        .content { padding: 2rem; }
+        .section { display: none; animation: fadeIn 0.5s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        
+        .card {
+            background: linear-gradient(145deg, var(--bg-light), var(--primary-color));
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--secondary-color);
+            box-shadow: var(--glow-shadow);
+        }
+
+        .card h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .card-icon svg { width: 22px; height: 22px; }
+        .card-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin: 0.5rem 0;
+            text-shadow: var(--glow-shadow);
+        }
+        .card-desc { color: var(--text-secondary); font-size: 0.9rem; }
+        .activity-list { margin-top: 1.5rem; }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: var(--secondary-color);
+        }
+        .activity-icon svg { width: 20px; height: 20px; }
+        .activity-content { flex: 1; }
+        .activity-title { font-weight: 500; color: var(--text-primary); margin-bottom: 0.3rem; }
+        .activity-time { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: var(--bg-light);
+            border-bottom: 2px solid var(--secondary-color);
+            color: var(--text-primary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .table td { padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .table tbody tr { transition: background-color 0.2s ease; }
+        .table tbody tr:hover { background: var(--bg-light); }
+
+        /* Status Badges */
+        .badge { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+        .badge-waiting { background: #F6E05E; color: #744210; }
+        .badge-meeting { background: #4299E1; color: white; }
+        .badge-done { background: #48BB78; color: white; }
+
+        /* Overlay for mobile */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .main-content.shifted { margin-left: 0; }
+            .content, .header { padding: 1rem; }
+            .header-title { font-size: 1.2rem; }
+            .btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+            .grid { grid-template-columns: 1fr; }
+            .table th, .table td { font-size: 0.85rem; }
+            .table thead { display: none; }
+            .table tr {
+                display: block;
+                margin-bottom: 1rem;
+                border-radius: 10px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-light);
+            }
+            .table td { display: flex; justify-content: space-between; align-items: center; text-align: right; padding-left: 50%; position: relative; border-bottom: 1px solid var(--border-color); }
+            .table td:last-child { border-bottom: none; }
+            .table td:before { content: attr(data-label); position: absolute; left: 1rem; width: calc(50% - 1rem); padding-right: 1rem; font-weight: 600; text-align: left; color: var(--text-primary); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader-grid">
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+        </div>
+        <div class="loading-text">MEMUAT SISTEM</div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <!-- SVG will be injected here by JS -->
+        </div>
+        <div class="notification-message">Berhasil dimuat!</div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0 1 12.28 0C16.43 19.18 14.03 20 12 20z"/></svg>
+                </div>
+                <h2>SESPRI</h2>
+                <p>Sekretaris Pribadi Digital</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="registrasi.html" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+                        <span>Registrasi Tamu</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="surat-masuk.html" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <span>Surat Masuk</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="surat-keluar.html" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <span>Surat Keluar</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="agenda.html" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Agenda</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="registrasi-tamu-publik.html" class="nav-link" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg>
+                        <span>Link Buku Tamu</span>
+                    </a>
+                </li>
+                 <li class="nav-item">
+                    <a href="rekap-tamu.html" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        <span>Rekap Arsip Tamu</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Overlay for mobile -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Header -->
+            <header class="header">
+                <button class="menu-toggle" id="menuToggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h1 class="header-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M21 12A9 9 0 0 0 6 5.3L3 8"/><path d="M21 22v-6h-6"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/></svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="content">
+                <section class="section active" id="dashboard">
+                    <div class="grid">
+                        <div class="card">
+                            <h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div> Total Tamu Hari Ini</h3>
+                            <div class="card-number" id="totalTamu">0</div>
+                            <p class="card-desc">Memuat data tamu...</p>
+                        </div>
+                        <div class="card">
+                            <h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div> Surat Masuk</h3>
+                            <div class="card-number" id="suratMasuk">0</div>
+                            <p class="card-desc">Memuat data surat...</p>
+                        </div>
+                        <div class="card">
+                            <h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div> Surat Keluar</h3>
+                            <div class="card-number" id="suratKeluar">0</div>
+                            <p class="card-desc">Memuat data surat...</p>
+                        </div>
+                        <div class="card">
+                            <h3><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg></div> Agenda Hari Ini</h3>
+                            <div class="card-number" id="agendaHariIni">0</div>
+                            <p class="card-desc">Memuat data agenda...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg> Aktivitas Terkini</h3>
+                        <div class="activity-list" id="activityList">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg> Tamu Terbaru</h3>
+                        <div class="table-container">
+                            <table class="table" id="guestTable">
+                                <thead>
+                                    <tr><th>Nama</th><th>Instansi</th><th>Keperluan</th><th>Waktu</th><th>Status</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" style="text-align: center;">Memuat data tamu...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const mainContent = document.getElementById('mainContent');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const notification = document.getElementById('notification');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        function showNotification(message, type = 'success', duration = 3000) {
+            const icons = {
+                success: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success-color);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+                error: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--error-color);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+            };
+            
+            notification.className = `notification ${type} show`;
+            notification.querySelector('.notification-icon').innerHTML = icons[type];
+            notification.querySelector('.notification-message').textContent = message;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+        
+        async function getData(storageKey, defaultData = []) {
+            let data = JSON.parse(localStorage.getItem(storageKey));
+            if (!data) {
+                data = defaultData;
+                localStorage.setItem(storageKey, JSON.stringify(data));
+            }
+            return data;
+        }
+
+        async function loadDashboardData() {
+             // Default data is now embedded
+            const defaultSuratMasuk = [
+              { "id": 1672531200000, "asal": "Kementerian Dalam Negeri", "tanggal": "2023-01-01", "perihal": "Undangan Rapat Koordinasi Nasional Pengendalian Inflasi Daerah", "disposisi": "Kepada Bagian Ekonomi..." },
+              { "id": 1672617600000, "asal": "Dinas Pendidikan Provinsi", "tanggal": "2023-01-02", "perihal": "Permohonan Data Guru", "disposisi": "" }
+            ];
+            const defaultSuratKeluar = [
+              { "id": 2023011001, "tujuan": "Gubernur Provinsi Maluku", "tanggal": "2023-01-10", "perihal": "Laporan Tahunan Kinerja BPMD" },
+              { "id": 2023011201, "tujuan": "Seluruh Kepala Desa", "tanggal": "2023-01-12", "perihal": "Edaran Percepatan Pembangunan Desa" }
+            ];
+            const defaultAgenda = [
+              { "id": 1, "tanggal": "2025-06-19", "waktu": "10:00", "judul": "Rapat Internal Mingguan", "lokasi": "Ruang Rapat Utama" },
+              { "id": 2, "tanggal": "2025-06-19", "waktu": "14:00", "judul": "Presentasi dengan Vendor XYZ", "lokasi": "Ruang Audiovisual" },
+              { "id": 3, "tanggal": "2025-06-20", "waktu": "09:00", "judul": "Pelatihan Staf Baru", "lokasi": "Aula Serbaguna" }
+            ];
+            
+            // Tamu Data
+            const tamuData = await getData('tamuData', []);
+            const today = new Date().toISOString().split('T')[0];
+            const todayGuests = tamuData.filter(guest => guest.tanggalDaftar && guest.tanggalDaftar.startsWith(today));
+            document.getElementById('totalTamu').textContent = todayGuests.length;
+            document.querySelector('#totalTamu + .card-desc').textContent = `${todayGuests.length} tamu terdaftar hari ini.`;
+
+            // Surat Masuk Data
+            const suratMasukData = await getData('suratMasukData', defaultSuratMasuk);
+            document.getElementById('suratMasuk').textContent = suratMasukData.length;
+            document.querySelector('#suratMasuk + .card-desc').textContent = `${suratMasukData.length} total surat masuk.`;
+
+            // Surat Keluar Data
+            const suratKeluarData = await getData('suratKeluarData', defaultSuratKeluar);
+            document.getElementById('suratKeluar').textContent = suratKeluarData.length;
+            document.querySelector('#suratKeluar + .card-desc').textContent = `${suratKeluarData.length} total surat keluar.`;
+
+            // Agenda Data
+            const agendaData = await getData('agendaData', defaultAgenda);
+            const todayAgenda = agendaData.filter(item => item.tanggal === today);
+            document.getElementById('agendaHariIni').textContent = todayAgenda.length;
+            document.querySelector('#agendaHariIni + .card-desc').textContent = `${todayAgenda.length} agenda terjadwal hari ini.`;
+            
+            // Aktivitas Terkini
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '';
+            if(todayGuests.length > 0) {
+                todayGuests.slice(0, 4).forEach(guest => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+                    activityItem.innerHTML = `
+                        <div class="activity-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></div>
+                        <div class="activity-content">
+                            <div class="activity-title">${guest.nama} mendaftar sebagai tamu</div>
+                            <div class="activity-time">${timeAgo(guest.tanggalDaftar)}</div>
+                        </div>`;
+                    activityList.appendChild(activityItem);
+                });
+            } else {
+                 activityList.innerHTML = `<div class="activity-item"><div class="activity-content"><div class="activity-title">Belum ada aktivitas hari ini.</div></div></div>`;
+            }
+
+            // Tamu Terbaru Table
+            const guestTableBody = document.getElementById('guestTable').querySelector('tbody');
+            guestTableBody.innerHTML = '';
+            if(todayGuests.length > 0) {
+                todayGuests.slice(0, 5).forEach(guest => {
+                    let statusClass = '';
+                    if (guest.status === 'Menunggu') statusClass = 'badge-waiting';
+                    if (guest.status === 'Sedang Bertemu') statusClass = 'badge-meeting';
+                    if (guest.status === 'Selesai') statusClass = 'badge-done';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Nama">${guest.nama}</td>
+                        <td data-label="Instansi">${guest.instansi || '-'}</td>
+                        <td data-label="Keperluan">${guest.keperluan}</td>
+                        <td data-label="Waktu">${formatDateTime(guest.waktu)}</td>
+                        <td data-label="Status"><span class="badge ${statusClass}">${guest.status}</span></td>`;
+                    guestTableBody.appendChild(row);
+                });
+            } else {
+                 guestTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Belum ada tamu hari ini</td></tr>`;
+            }
+        }
+        
+        function loadInitialAnimations() {
+             setTimeout(() => {
+                loadingOverlay.style.opacity = '0';
+                loadingOverlay.style.visibility = 'hidden';
+                document.body.style.opacity = '1';
+                loadDashboardData();
+            }, 1500);
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            if (window.innerWidth > 768) {
+                mainContent.classList.toggle('shifted');
+            }
+        }
+        
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return `${Math.floor(interval)} tahun lalu`;
+            interval = seconds / 2592000;
+            if (interval > 1) return `${Math.floor(interval)} bulan lalu`;
+            interval = seconds / 86400;
+            if (interval > 1) return `${Math.floor(interval)} hari lalu`;
+            interval = seconds / 3600;
+            if (interval > 1) return `${Math.floor(interval)} jam lalu`;
+            interval = seconds / 60;
+            if (interval > 1) return `${Math.floor(interval)} menit lalu`;
+            return 'Baru saja';
+        }
+
+
+        refreshBtn.addEventListener('click', () => {
+             showNotification('Memuat ulang data...', 'success');
+             localStorage.clear(); // Clear all data for a full refresh from defaults
+             loadDashboardData();
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                if (sidebar.classList.contains('active')) {
+                    mainContent.classList.add('shifted');
+                } else {
+                    mainContent.classList.remove('shifted');
+                }
+                overlay.classList.remove('active');
+            } else {
+                mainContent.classList.remove('shifted');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.add('active');
+                mainContent.classList.add('shifted');
+            }
+            loadInitialAnimations();
+        });
+    </script>
+</body>
+</html>

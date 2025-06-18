@@ -1,0 +1,24 @@
+[
+    {
+      "id": 1,
+      "tanggal": "2025-06-19",
+      "waktu": "10:00",
+      "judul": "Rapat Internal Mingguan",
+      "lokasi": "Ruang Rapat Utama"
+    },
+    {
+      "id": 2,
+      "tanggal": "2025-06-19",
+      "waktu": "14:00",
+      "judul": "Presentasi dengan Vendor XYZ",
+      "lokasi": "Ruang Audiovisual"
+    },
+    {
+      "id": 3,
+      "tanggal": "2025-06-20",
+      "waktu": "09:00",
+      "judul": "Pelatihan Staf Baru",
+      "lokasi": "Aula Serbaguna"
+    }
+  ]
+  

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buku Tamu Digital - SESPRI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0D1117;
+            --bg-dark: #161B22;
+            --bg-light: #21262D;
+            --border-color: #30363D;
+            --secondary-color: #00AFFF;
+            --accent-color: #E0115F;
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+            --glow-shadow: 0 0 15px rgba(0, 175, 255, 0.4);
+            --glow-shadow-success: 0 0 15px rgba(40, 167, 69, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+            opacity: 0;
+            animation: fadeInBody 1s forwards;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeInBody {
+            to { opacity: 1; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, var(--bg-light), var(--primary-color));
+            border-radius: 16px;
+            padding: 30px 40px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            background-clip: padding-box;
+            border: 2px solid transparent;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            z-index: -1;
+            background: linear-gradient(90deg, #00AFFF, #E0115F, #00AFFF);
+            background-size: 300% 300%;
+            border-radius: 16px;
+            animation: rainbowBorder 6s linear infinite;
+        }
+
+        @keyframes rainbowBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .card-header { text-align: center; margin-bottom: 30px; }
+        .card-header h2 { font-size: 2rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 600; }
+        .card-header p { color: var(--text-secondary); font-size: 1rem; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-secondary); }
+        .form-control {
+            width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--border-color);
+            border-radius: 8px; font-size: 1rem; font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease; background: var(--bg-dark); color: var(--text-primary);
+        }
+        .form-control:focus { outline: none; border-color: var(--secondary-color); box-shadow: var(--glow-shadow); }
+
+        .btn {
+            padding: 0.8rem 1.5rem; border: none; border-radius: 25px; cursor: pointer;
+            font-size: 1rem; font-weight: 600; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 0.5rem; transition: all 0.3s ease; width: 100%;
+        }
+        .btn-primary { background: var(--secondary-color); color: var(--primary-color); border: 1px solid var(--secondary-color); }
+        .btn:hover { transform: translateY(-3px); box-shadow: var(--glow-shadow); }
+        .btn svg { width: 18px; height: 18px; }
+
+        /* Modal & Notification System */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0s 0.3s;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; transition: opacity 0.3s ease; }
+        .modal-card {
+            background: linear-gradient(145deg, var(--bg-light), var(--primary-color));
+            border-radius: 12px; border: 1px solid var(--border-color);
+            padding: 30px; text-align: center; width: 90%; max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: scale(0.9); opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show .modal-card { transform: scale(1); opacity: 1; }
+        .modal-icon { margin-bottom: 20px; }
+        .modal-icon svg { width: 50px; height: 50px; color: var(--secondary-color); }
+        .modal-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
+        .modal-message { color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }
+        .service-hours {
+            font-size: 0.9rem;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        .modal-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 25px; }
+        .modal-buttons .btn { width: auto; padding: 0.7rem 2rem; }
+        .modal-buttons .btn-danger { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .modal-buttons .btn-danger:hover { background: var(--accent-color); color: var(--text-primary); box-shadow: 0 0 15px rgba(224, 17, 95, 0.4); }
+
+        .final-thankyou {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            color: var(--text-primary);
+            font-size: 3rem; font-weight: 700;
+            text-shadow: 0 0 20px var(--glow-shadow-success);
+            z-index: 1100;
+            opacity: 0; visibility: hidden;
+            transition: all 0.4s ease;
+        }
+        .final-thankyou.show { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+        
+        .loading-overlay {
+            position: fixed; top: 20px; right: 20px; background: var(--bg-light); color: var(--text-primary);
+            padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 1rem; z-index: 2000;
+            transform: translateX(150%); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            visibility: hidden;
+        }
+        .loading-overlay.show { transform: translateX(0); visibility: visible; }
+        .loading-icon svg { width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .card { padding: 20px; }
+            .card-header h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg></div>
+        <div>Mengirim data...</div>
+    </div>
+
+    <div class="container" style="visibility: hidden;" id="registrationContainer">
+        <div class="card" id="registrationCard">
+            <div class="card-header">
+                <h2>Buku Tamu Digital</h2>
+                <p>Silakan isi formulir di bawah ini untuk mendaftar.</p>
+            </div>
+            <form id="formTamuPublik">
+                <div class="form-group"><label for="namaTamu">Nama Lengkap *</label><input type="text" class="form-control" id="namaTamu" required></div>
+                <div class="form-group"><label for="teleponTamu">No. Telepon</label><input type="tel" class="form-control" id="teleponTamu"></div>
+                <div class="form-group"><label for="instansiTamu">Instansi/Perusahaan</label><input type="text" class="form-control" id="instansiTamu"></div>
+                <div class="form-group"><label for="keperluanTamu">Keperluan *</label><input type="text" class="form-control" id="keperluanTamu" required></div>
+                <div class="form-group"><label for="bertemuDengan">Bertemu Dengan</label><input type="text" class="form-control" id="bertemuDengan"></div>
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    Kirim Pendaftaran
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Welcome Modal -->
+    <div class="modal-overlay show" id="welcomeModal">
+        <div class="modal-card">
+            <div class="modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </div>
+            <h3 class="modal-title">Selamat Datang</h3>
+            <p class="modal-message">di Aplikasi Registrasi Tamu
+                <br><strong>BPMD Kabupaten Kepulauan Tanimbar Tahun 2025</strong>
+            </p>
+            <div class="service-hours">
+                <p>Waktu registrasi tamu mulai dari jam <strong>08:00 WIT - 17:00 WIT</strong>. Jika Anda registrasi di luar jam itu, kami tidak melayani pendaftaran.</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="startButton" class="btn btn-primary" style="width: auto;">Mulai Melakukan Registrasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Closed Service Modal -->
+    <div class="modal-overlay" id="closedModal">
+        <div class="modal-card">
+            <div class="modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--warning-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+            <h3 class="modal-title">Waktu Pelayanan Tutup</h3>
+            <p class="modal-message">Waktu pelayanan belum dibuka. Mohon baca pesan terlebih dahulu dan kembali lagi pada jam 08:00 - 17:00 WIT.</p>
+            <div class="modal-buttons">
+                <button id="closedButton" class="btn btn-primary" style="width: auto;">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal">
+        <div class="modal-card">
+            <div class="modal-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+            <h3 class="modal-title">Pendaftaran Berhasil!</h3>
+            <p class="modal-message">Mohon menunggu, nanti salah satu pegawai akan memanggil Anda untuk masuk.</p>
+            <div class="modal-buttons">
+                <button id="cancelButton" class="btn btn-danger">Batal</button>
+                <button id="confirmButton" class="btn btn-primary">Ya</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Final Thank You Message -->
+    <div class="final-thankyou" id="thankYouMessage">
+        Terima Kasih!
+    </div>
+
+    <script>
+        const formTamuPublik = document.getElementById('formTamuPublik');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const registrationContainer = document.getElementById('registrationContainer');
+        
+        // Modals
+        const welcomeModal = document.getElementById('welcomeModal');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const thankYouMessage = document.getElementById('thankYouMessage');
+        const closedModal = document.getElementById('closedModal');
+
+        // Buttons
+        const startButton = document.getElementById('startButton');
+        const confirmButton = document.getElementById('confirmButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const closedButton = document.getElementById('closedButton');
+        
+
+        function checkServiceHours() {
+            // WIT is UTC+9
+            const now = new Date();
+            const currentHour = now.getUTCHours() + 9;
+            
+            // Check if currentHour is between 8 and 17 (5 PM)
+            if (currentHour >= 8 && currentHour < 17) {
+                return true;
+            }
+            return false;
+        }
+
+        startButton.addEventListener('click', () => {
+             if (checkServiceHours()) {
+                welcomeModal.classList.remove('show');
+                registrationContainer.style.visibility = 'visible';
+                registrationContainer.style.animation = 'fadeInBody 0.5s forwards';
+            } else {
+                closedModal.classList.add('show');
+            }
+        });
+
+        formTamuPublik.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!checkServiceHours()) {
+                closedModal.classList.add('show');
+                return;
+            }
+
+            loadingOverlay.classList.add('show');
+
+            const newTamu = {
+                id: Date.now(),
+                nama: document.getElementById('namaTamu').value.trim(),
+                telepon: document.getElementById('teleponTamu').value.trim(),
+                instansi: document.getElementById('instansiTamu').value.trim(),
+                keperluan: document.getElementById('keperluanTamu').value.trim(),
+                waktu: new Date().toISOString(),
+                bertemuDengan: document.getElementById('bertemuDengan').value.trim(),
+                catatan: '',
+                status: 'Menunggu',
+                tanggalDaftar: new Date().toISOString()
+            };
+
+            if (!newTamu.nama || !newTamu.keperluan) {
+                loadingOverlay.classList.remove('show');
+                alert('Nama dan Keperluan wajib diisi!');
+                return;
+            }
+
+            setTimeout(() => {
+                try {
+                    let tamuData = JSON.parse(localStorage.getItem('tamuData')) || [];
+                    tamuData.unshift(newTamu);
+                    localStorage.setItem('tamuData', JSON.stringify(tamuData));
+
+                    loadingOverlay.classList.remove('show');
+                    confirmationModal.classList.add('show');
+                    formTamuPublik.reset();
+                    
+                } catch (error) {
+                    loadingOverlay.classList.remove('show');
+                    alert('Terjadi kesalahan saat menyimpan data.');
+                    console.error('Error saving to localStorage:', error);
+                }
+            }, 1000);
+        });
+
+        confirmButton.addEventListener('click', () => {
+            confirmationModal.classList.remove('show');
+            thankYouMessage.classList.add('show');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        });
+
+        cancelButton.addEventListener('click', () => {
+            confirmationModal.classList.remove('show');
+        });
+        
+        closedButton.addEventListener('click', () => {
+            closedModal.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

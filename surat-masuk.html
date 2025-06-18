@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Surat Masuk - SESPRI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0D1117;
+            --bg-dark: #161B22;
+            --bg-light: #21262D;
+            --border-color: #30363D;
+            --secondary-color: #00AFFF;
+            --accent-color: #E0115F;
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --glow-shadow: 0 0 15px rgba(0, 175, 255, 0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: var(--primary-color); color: var(--text-primary); }
+        .container { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 280px; background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh; left: -280px; transition: all 0.3s ease;
+            z-index: 1000; overflow-y: auto;
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 2rem; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .logo-img {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(145deg, var(--secondary-color), var(--accent-color));
+            margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
+            border: 3px solid var(--primary-color); box-shadow: var(--glow-shadow);
+        }
+        .logo-img svg { width: 40px; height: 40px; color: white; }
+        .sidebar-header h2 { font-size: 1.5rem; letter-spacing: 1px; }
+        .sidebar-header p { color: var(--text-secondary); font-size: 0.9rem; }
+        .nav-menu { list-style: none; padding: 1rem 0; }
+        .nav-link { display: flex; align-items: center; padding: 1rem 2rem; color: var(--text-secondary); text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; gap: 1rem; }
+        .nav-link:hover, .nav-link.active { color: var(--text-primary); background: rgba(0, 175, 255, 0.1); border-left-color: var(--secondary-color); }
+        .nav-link svg { width: 20px; height: 20px; }
+
+        .main-content { flex: 1; margin-left: 0; transition: all 0.3s ease; }
+        .main-content.shifted { margin-left: 280px; }
+        .header {
+            background: rgba(13, 17, 23, 0.8); backdrop-filter: blur(5px);
+            padding: 1rem 2rem; border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .menu-toggle { background: none; border: none; color: var(--secondary-color); cursor: pointer; padding: 0.5rem; border-radius: 5px; }
+        .menu-toggle svg { width: 24px; height: 24px; }
+        .header-title { font-size: 1.5rem; font-weight: 600; }
+        .content { padding: 2rem; }
+        
+        .card {
+            background: linear-gradient(145deg, var(--bg-light), var(--primary-color));
+            border-radius: 12px; padding: 1.5rem 2rem;
+            border: 1px solid var(--border-color); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.3rem; font-weight: 500; }
+        .btn { padding: 0.7rem 1.5rem; border: 1px solid var(--secondary-color); border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease; background: transparent; color: var(--secondary-color); }
+        .btn-primary { background: var(--secondary-color); color: var(--primary-color); }
+        .btn:hover { transform: translateY(-3px); box-shadow: var(--glow-shadow); }
+
+        .table-container { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; background: transparent; }
+        .table th { background: var(--bg-light); border-bottom: 2px solid var(--secondary-color); padding: 1rem; text-align: left; font-weight: 600; }
+        .table td { padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .table tbody tr:hover { background: var(--bg-light); }
+        .action-buttons { display: flex; gap: 0.5rem; }
+        .action-buttons .btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .btn-warning { border-color: #ffc107; color: #ffc107; }
+        .btn-warning:hover { background: #ffc107; color: var(--primary-color); box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); }
+        .btn-danger { border-color: var(--error-color); color: var(--error-color); }
+        .btn-danger:hover { background: var(--error-color); color: var(--text-primary); box-shadow: 0 0 15px rgba(220, 53, 69, 0.4); }
+
+        .badge { padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: var(--success-color); color: white; }
+        .badge-pending { background: #f6ad55; color: var(--primary-color); }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 999; opacity: 0; visibility: hidden; }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--bg-light); border: 1px solid var(--border-color);
+            border-radius: 10px; width: 90%; max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .modal-title { font-size: 1.3rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+        .modal-body { padding: 1.5rem; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; padding: 1.5rem; border-top: 1px solid var(--border-color); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-secondary); }
+        .form-control { width: 100%; padding: 0.8rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 1rem; background: var(--bg-dark); color: var(--text-primary); }
+        
+        #disposisiResult { background: var(--primary-color); padding: 1rem; border-radius: 8px; margin-top: 1rem; white-space: pre-wrap; font-style: italic; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-img"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0 1 12.28 0C16.43 19.18 14.03 20 12 20z"/></svg></div>
+                <h2>SESPRI</h2><p>Sekretaris Pribadi Digital</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="registrasi.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg><span>Registrasi (Admin)</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>Surat Masuk</span></a></li>
+                <li class="nav-item"><a href="surat-keluar.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><span>Surat Keluar</span></a></li>
+                <li class="nav-item"><a href="agenda.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Agenda</span></a></li>
+                <li class="nav-item"><a href="registrasi-tamu-publik.html" class="nav-link" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg><span>Link Buku Tamu</span></a></li>
+                <li class="nav-item"><a href="rekap-tamu.html" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>Rekap Arsip Tamu</span></a></li>
+            </ul>
+        </nav>
+        <div class="overlay" id="overlay"></div>
+
+        <main class="main-content" id="mainContent">
+            <header class="header">
+                <button class="menu-toggle" id="menuToggle"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <h1 class="header-title">Manajemen Surat Masuk</h1>
+            </header>
+
+            <div class="content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Daftar Surat Masuk</h3>
+                        <button class="btn btn-primary" id="addSuratBtn">Tambah Surat</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr><th>No.</th><th>Asal Surat</th><th>Tanggal</th><th>Perihal</th><th>Disposisi</th><th>Aksi</th></tr>
+                            </thead>
+                            <tbody id="suratTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Add/Edit Surat -->
+    <div class="modal" id="suratModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title" id="suratModalTitle">Tambah Surat Baru</h3><button class="modal-close">&times;</button></div>
+            <form id="suratForm">
+                <div class="modal-body">
+                    <input type="hidden" id="suratId">
+                    <div class="form-group"><label for="asalSurat">Asal Surat</label><input type="text" id="asalSurat" class="form-control" required></div>
+                    <div class="form-group"><label for="tanggalSurat">Tanggal Surat</label><input type="date" id="tanggalSurat" class="form-control" required></div>
+                    <div class="form-group"><label for="perihalSurat">Perihal</label><textarea id="perihalSurat" class="form-control" rows="3" required></textarea></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn modal-close">Batal</button><button type="submit" class="btn btn-primary">Simpan</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal for View Surat -->
+    <div class="modal" id="lihatModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title">Detail Surat Masuk</h3><button class="modal-close">&times;</button></div>
+            <div class="modal-body">
+                <p><strong>Asal Surat:</strong> <span id="lihatAsalSurat"></span></p>
+                <p><strong>Tanggal:</strong> <span id="lihatTanggalSurat"></span></p>
+                <p><strong>Perihal:</strong></p>
+                <p id="lihatPerihalSurat" style="white-space: pre-wrap;"></p>
+                <hr style="margin: 1rem 0; border-color: var(--border-color);">
+                <h4>Hasil Disposisi Pimpinan</h4>
+                <div id="lihatDisposisi">Belum ada disposisi.</div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn modal-close">Tutup</button></div>
+        </div>
+    </div>
+
+    <!-- Modal for Disposisi -->
+    <div class="modal" id="disposisiModal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title">Disposisi Pimpinan</h3><button class="modal-close">&times;</button></div>
+            <form id="disposisiForm">
+                 <div class="modal-body">
+                    <input type="hidden" id="disposisiSuratId">
+                    <div class="form-group">
+                        <label for="disposisiText">Tuliskan hasil disposisi:</label>
+                        <textarea id="disposisiText" class="form-control" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn modal-close">Batal</button><button type="submit" class="btn btn-primary">Simpan Disposisi</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Globals ---
+        let suratData = [];
+        let currentSuratId = null;
+
+        // --- DOM Elements ---
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const mainContent = document.getElementById('mainContent');
+        const menuToggle = document.getElementById('menuToggle');
+        const addSuratBtn = document.getElementById('addSuratBtn');
+        const suratTableBody = document.getElementById('suratTableBody');
+        
+        // Modals
+        const suratModal = document.getElementById('suratModal');
+        const lihatModal = document.getElementById('lihatModal');
+        const disposisiModal = document.getElementById('disposisiModal');
+        
+        // Forms
+        const suratForm = document.getElementById('suratForm');
+        const disposisiForm = document.getElementById('disposisiForm');
+
+        // --- Utility Functions ---
+        const formatTanggal = (dateString) => new Date(dateString).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            if (window.innerWidth > 768) mainContent.classList.toggle('shifted');
+        }
+        menuToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+        if (window.innerWidth > 768) {
+            sidebar.classList.add('active');
+            mainContent.classList.add('shifted');
+        }
+
+        // --- Modal Logic ---
+        function openModal(modal) { modal.classList.add('show'); }
+        function closeModal(modal) { modal.classList.remove('show'); }
+
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(suratModal);
+                closeModal(lihatModal);
+                closeModal(disposisiModal);
+            });
+        });
+
+        // --- Data Handling ---
+        function loadData() {
+            const rawData = localStorage.getItem('suratMasukData');
+            if (rawData) {
+                suratData = JSON.parse(rawData);
+            } else {
+                suratData = [
+                  {
+                    "id": 1672531200000,
+                    "asal": "Kementerian Dalam Negeri",
+                    "tanggal": "2023-01-01",
+                    "perihal": "Undangan Rapat Koordinasi Nasional Pengendalian Inflasi Daerah",
+                    "disposisi": "Kepada Bagian Ekonomi untuk segera mempersiapkan materi presentasi dan data pendukung. Harap koordinasi dengan BPS daerah."
+                  },
+                  {
+                    "id": 1672617600000,
+                    "asal": "Dinas Pendidikan Provinsi",
+                    "tanggal": "2023-01-02",
+                    "perihal": "Permohonan Data Guru dan Tenaga Kependidikan Tahun 2023",
+                    "disposisi": ""
+                  }
+                ];
+                saveData();
+            }
+            renderTable();
+        }
+
+        function saveData() {
+            localStorage.setItem('suratMasukData', JSON.stringify(suratData));
+            renderTable();
+        }
+
+        function renderTable() {
+            suratTableBody.innerHTML = '';
+            if (suratData.length === 0) {
+                suratTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center;">Belum ada surat masuk.</td></tr>`;
+                return;
+            }
+            suratData.forEach((surat, index) => {
+                const row = document.createElement('tr');
+                const disposisiStatus = surat.disposisi ? `<span class="badge badge-success">Selesai</span>` : `<span class="badge badge-pending">Menunggu</span>`;
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${surat.asal}</td>
+                    <td>${formatTanggal(surat.tanggal)}</td>
+                    <td>${surat.perihal.substring(0, 50)}...</td>
+                    <td>${disposisiStatus}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-sm" onclick="viewSurat(${surat.id})">Lihat</button>
+                        <button class="btn btn-sm btn-warning" onclick="openDisposisiModal(${surat.id})">Disposisi</button>
+                        <button class="btn btn-sm" onclick="editSurat(${surat.id})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteSurat(${surat.id})">Hapus</button>
+                    </td>
+                `;
+                suratTableBody.appendChild(row);
+            });
+        }
+        
+        // --- Event Handlers ---
+        addSuratBtn.addEventListener('click', () => {
+            currentSuratId = null;
+            suratForm.reset();
+            document.getElementById('suratModalTitle').textContent = 'Tambah Surat Baru';
+            openModal(suratModal);
+        });
+
+        suratForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const surat = {
+                id: currentSuratId || Date.now(),
+                asal: document.getElementById('asalSurat').value,
+                tanggal: document.getElementById('tanggalSurat').value,
+                perihal: document.getElementById('perihalSurat').value,
+                disposisi: currentSuratId ? suratData.find(s => s.id === currentSuratId).disposisi : ''
+            };
+            if (currentSuratId) {
+                const index = suratData.findIndex(s => s.id === currentSuratId);
+                suratData[index] = surat;
+            } else {
+                suratData.unshift(surat);
+            }
+            saveData();
+            closeModal(suratModal);
+        });
+        
+        disposisiForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('disposisiSuratId').value);
+            const index = suratData.findIndex(s => s.id === id);
+            if(index !== -1) {
+                suratData[index].disposisi = document.getElementById('disposisiText').value;
+                saveData();
+            }
+            closeModal(disposisiModal);
+        });
+        
+        // --- Global Functions for Buttons ---
+        window.viewSurat = (id) => {
+            const surat = suratData.find(s => s.id === id);
+            if (!surat) return;
+            document.getElementById('lihatAsalSurat').textContent = surat.asal;
+            document.getElementById('lihatTanggalSurat').textContent = formatTanggal(surat.tanggal);
+            document.getElementById('lihatPerihalSurat').textContent = surat.perihal;
+            const disposisiEl = document.getElementById('lihatDisposisi');
+            if(surat.disposisi) {
+                disposisiEl.innerHTML = `<div id="disposisiResult">${surat.disposisi}</div>`;
+            } else {
+                disposisiEl.textContent = 'Belum ada disposisi.';
+            }
+            openModal(lihatModal);
+        };
+
+        window.openDisposisiModal = (id) => {
+            const surat = suratData.find(s => s.id === id);
+            if(!surat) return;
+            document.getElementById('disposisiSuratId').value = id;
+            document.getElementById('disposisiText').value = surat.disposisi || '';
+            openModal(disposisiModal);
+        };
+
+        window.editSurat = (id) => {
+            const surat = suratData.find(s => s.id === id);
+            if (!surat) return;
+            currentSuratId = id;
+            document.getElementById('suratModalTitle').textContent = 'Edit Surat';
+            document.getElementById('suratId').value = surat.id;
+            document.getElementById('asalSurat').value = surat.asal;
+            document.getElementById('tanggalSurat').value = surat.tanggal;
+            document.getElementById('perihalSurat').value = surat.perihal;
+            openModal(suratModal);
+        };
+
+        window.deleteSurat = (id) => {
+            if (confirm('Apakah Anda yakin ingin menghapus surat ini?')) {
+                suratData = suratData.filter(s => s.id !== id);
+                saveData();
+            }
+        };
+        
+        // --- Init ---
+        loadData();
+    });
+    </script>
+</body>
+</html>
